@@ -1,0 +1,90 @@
+package com.hrms.backend.controller;
+
+import com.hrms.backend.entity.User;
+import com.hrms.backend.repository.UserRepository;
+import com.hrms.backend.security.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
+        String email = credentials.get("email");
+        String password = credentials.get("password");
+        Map<String, Object> response = new HashMap<>();
+
+        Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isPresent() && passwordEncoder.matches(password, userOptional.get().getPassword())) {
+            User user = userOptional.get();
+            String token = jwtUtil.generateToken(user.getEmail());
+
+            response.put("token", token);
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", user.getId());
+            userData.put("email", user.getEmail());
+            userData.put("role", user.getRole());
+            response.put("user", userData);
+
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("status", 401);
+            response.put("error", "Unauthorized");
+            response.put("message", "Invalid email or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<Map<String, String>> signup(@RequestBody Map<String, String> userData) {
+        Map<String, String> response = new HashMap<>();
+
+        if (userRepository.findByEmail(userData.get("email")).isPresent()) {
+            response.put("message", "Email already exists");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        User newUser = new User();
+        newUser.setEmail(userData.get("email"));
+        newUser.setPassword(passwordEncoder.encode(userData.get("password")));
+        newUser.setRole(userData.getOrDefault("role", "EMPLOYEE"));
+
+        userRepository.save(newUser);
+
+        response.put("message", "User registered successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Logged out successfully. Please remove token on client side.");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@RequestBody Map<String, String> request) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Password reset link sent to " + request.get("email"));
+        return ResponseEntity.ok(response);
+    }
+}
