@@ -43,6 +43,7 @@ public class AuthController {
             userData.put("id", user.getId());
             userData.put("email", user.getEmail());
             userData.put("role", user.getRole());
+            userData.put("fullName", user.getFullName()); // Added fullName to login response
             response.put("user", userData);
 
             return ResponseEntity.ok(response);
@@ -67,6 +68,7 @@ public class AuthController {
         newUser.setEmail(userData.get("email"));
         newUser.setPassword(passwordEncoder.encode(userData.get("password")));
         newUser.setRole(userData.getOrDefault("role", "EMPLOYEE"));
+        newUser.setFullName(userData.get("fullName")); // Extracts and saves fullName from frontend
 
         userRepository.save(newUser);
 

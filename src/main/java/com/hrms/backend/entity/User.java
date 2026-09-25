@@ -19,6 +19,9 @@ public class User {
     @Column(nullable = false)
     private String role;
 
+    @Column(name = "full_name")
+    private String fullName;
+
     // Manual Getters and Setters to bypass Eclipse Lombok issue
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -31,4 +34,7 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 }
