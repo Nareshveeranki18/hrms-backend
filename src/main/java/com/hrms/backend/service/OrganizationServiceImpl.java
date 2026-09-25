@@ -23,4 +23,26 @@ public class OrganizationServiceImpl implements OrganizationService {
     public List<Organization> getAllOrganizations() {
         return organizationRepository.findAll();
     }
+
+    // Adding the missing Update method
+    @Override
+    public Organization updateOrganization(Long id, Organization orgDetails) {
+        Organization existingOrg = organizationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + id));
+
+        existingOrg.setName(orgDetails.getName());
+        existingOrg.setAddress(orgDetails.getAddress());
+        existingOrg.setContactEmail(orgDetails.getContactEmail());
+
+        return organizationRepository.save(existingOrg);
+    }
+
+    // Adding the missing Delete method
+    @Override
+    public void deleteOrganization(Long id) {
+        Organization existingOrg = organizationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + id));
+        
+        organizationRepository.delete(existingOrg);
+    }
 }
